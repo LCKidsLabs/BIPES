@@ -241,7 +241,7 @@ class Tool {
       match_ = Files.received_string.match(re);
       if (match_.length == 3) {
         let coordinates = match_ [2].split(',').map((item)=>item = parseFloat(item))
-        window.frames[3].modules.DataStorage.push(match_[1],coordinates)
+        window.frames[1].modules.DataStorage.push(match_[1],coordinates)
 
 
         /*STARTDEPRECATED*/
@@ -251,25 +251,11 @@ class Tool {
           coordinates [1] = parseFloat(coordinates [1])
           let q = new Queue(coordinates [0]);
           q.enqueue(coordinates[1]);
-          if (UI ['workspace'].EasyMQTT_bridge.checked)
-            this.EasyMQTTBridge(coordinates [0], coordinates[1])
         }
         /*ENDDEPRECATED*/
       }
     }
     Files.received_string = Files.received_string.replace(re, '\r\n') //purge received string out
-  }
-  /**Bridge incoming data to MQTT.
-  * @param {number} id_ - ID for the MQTT message.
-  * @param {number} value_ - Value for the MQTT message.
-  */
-  static EasyMQTTBridge (id_, value_) {
-	  var easyMQTTsession = window.localStorage['bridgeSession'];
-	  if (easyMQTTsession) {
-		  xhrGET(`https://bipes.net.br/easymqtt/publish.php?session=${easyMQTTsession}&topic=Topic${id_}&value=${value_}`,'',(ev)=>{
-		    UI ['notify'].log(ev);
-		  });
-		}
   }
   /**Clear 'core/queue.js queue*/
   static clearQueue () {
@@ -286,7 +272,7 @@ class Tool {
   */
   static getText (pName) {
     var request = new XMLHttpRequest();
-        request.open('GET', '/beta2/ui/pylibs/' + pName, true);
+        request.open('GET', 'pylibs/' + pName, true);
         request.send(null);
         request.onreadystatechange = function () {
         if (request.readyState === 4 && request.status === 200) {

@@ -79,6 +79,14 @@ Code.isRtl = function() {
 };
 
 /**
+ * Placeholder for importing a project from a #key share link; does nothing yet.
+ * @param {string} key Key from the URL hash.
+ */
+Code.importFromShareLink = function(key) {
+  // Share-link import will plug in here.
+};
+
+/**
  * Load blocks saved on App Engine Storage or in session/local storage.
  * @param {string} defaultXml Text representation of default blocks.
  */
@@ -95,8 +103,7 @@ Code.loadBlocks = function(defaultXml) {
     if (typeof UI != 'undefined' && UI ['workspace'].devices.constructor.name == 'Object') {
       if ('BlocklyStorage' in window && window.location.hash.length > 1) {
         BlocklyStorage.restoreBlocks ();
-        // An href with #key trigers an AJAX call to retrieve saved blocks.
-        BlocklyStorage.retrieveXml(window.location.hash.substring(1));
+        Code.importFromShareLink(window.location.hash.substring(1));
       } else if (loadOnce) {
         // Language switching stores the blocks during the reload.
         delete window.sessionStorage.loadOnceBlocks;
@@ -181,7 +188,7 @@ Code.LANG = Code.getLang();
  * @private
  */
 
-Code.TABS_ = ['blocks', 'console', 'files', 'device', 'programs', 'databoard', 'mqtt', 'iot'];
+Code.TABS_ = ['blocks', 'console', 'files', 'device', 'databoard', 'iot'];
 
 Code.current = ["blocks", "",""]
 
@@ -311,21 +318,21 @@ Code.renderContent = (_navigation) => {
     case  "databoard":
       // Wait 10ms because the canvas of chart.js cannot be inited while not displaying
       setTimeout(() => {
-        if (!window.frames[3].inited) {
-          if (typeof window.frames[3].modules == 'object' && typeof window.frames[3].modules.Workspaces == 'object') {
-            window.frames[3].initDataStorage()
+        if (!window.frames[1].inited) {
+          if (typeof window.frames[1].modules == 'object' && typeof window.frames[1].modules.Workspaces == 'object') {
+            window.frames[1].initDataStorage()
           } else {
             /** wait to databoad to load */
             var interval = setInterval(() => {
-              if (typeof window.frames[3].modules == 'object' && typeof window.frames[3].modules.Workspaces == 'object') {
-                window.frames[3].initDataStorage()
-                if (window.frames[3].inited)
+              if (typeof window.frames[1].modules == 'object' && typeof window.frames[1].modules.Workspaces == 'object') {
+                window.frames[1].initDataStorage()
+                if (window.frames[1].inited)
                   clearInterval(interval)
               }
             }, 500)
           }
         } else
-        window.frames[3].initGrid()
+        window.frames[1].initGrid()
       }, 10)
       break
     case "blocks":
@@ -349,9 +356,7 @@ Code.renderContent = (_navigation) => {
       term.resize()
       break
     case "device":
-    case "programs":
     case "iot":
-    case "mqtt":
       break
   }
   content.focus()
@@ -374,9 +379,7 @@ Code.resizeContent = (_navigation) => {
         break
       case "databoard":
       case "device":
-      case "programs":
       case "iot":
-      case "mqtt":
         break
     }
   })
@@ -389,8 +392,8 @@ Code.resizeContent = (_navigation) => {
 Code.deinitContent = (_navigation) => {
   switch (_navigation) {
   case  "databoard":
-    if(window.frames[3].grid_inited)
-      window.frames[3].deinitGrid()
+    if(window.frames[1].grid_inited)
+      window.frames[1].deinitGrid()
     break
   case "blocks":
     Code.workspace.setVisible(false);
@@ -579,17 +582,8 @@ Code.init = function() {
 
 
 
-  // Disable the link button if page isn't backed by App Engine storage.
-  var linkButton = document.getElementById('linkButton');
   if ('BlocklyStorage' in window) {
-    BlocklyStorage['HTTPREQUEST_ERROR'] = MSG['httpRequestError'];
-    BlocklyStorage['LINK_ALERT'] = MSG['linkAlert'];
-    BlocklyStorage['HASH_ERROR'] = MSG['hashError'];
     BlocklyStorage['XML_ERROR'] = MSG['xmlError'];
-    Code.bindClick(linkButton,
-        function () {BlocklyStorage.link(Code.workspace);});
-  } else if (linkButton) {
-    linkButton.className = 'disabled';
   }
 
   // Bind left click/tap and right click on tabs
@@ -643,8 +637,8 @@ Code.init = function() {
 
         }
       };
-      console.log("Getting /beta2/ui/pylibs/" + lib + '.py');
-      xmlhttp.open('GET', '/beta2/ui/pylibs/' + lib + '.py');
+      console.log("Getting pylibs/" + lib + '.py');
+      xmlhttp.open('GET', 'pylibs/' + lib + '.py');
       xmlhttp.send();
 
 */
@@ -740,8 +734,8 @@ Code.init = function() {
 
             }
           };
-          console.log("Trying to get /beta2/ui/pylibs/" + lib + '.py' + ' from server');
-          xmlhttp.open('GET', '/beta2/ui/pylibs/' + lib + '.py');
+          console.log("Trying to get pylibs/" + lib + '.py' + ' from server');
+          xmlhttp.open('GET', 'pylibs/' + lib + '.py');
           xmlhttp.send();
 
 
@@ -938,10 +932,8 @@ Code.initLanguage = function() {
   //Changed to a fixed title for all languages - BIPES Beta
   document.getElementById('tab_blocks').textContent = MSG['blocks'];
   document.getElementById('tab_files').textContent = MSG['files'];
-  document.getElementById('tab_programs').textContent = MSG['shared'];
   document.getElementById('tab_device').textContent = MSG['device'];
 
-  document.getElementById('linkButton').title = MSG['linkTooltip'];
   document.getElementById('runButton').title = MSG['runTooltip'];
   //document.getElementById('trashButton').title = MSG['trashTooltip'];
   document.getElementById('saveButton').title = MSG['saveTooltip'];

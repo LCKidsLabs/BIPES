@@ -28,11 +28,7 @@ class mux {
       this.currentChannel = 'webserial';
     }
 
-    this.ifunavailable = {
-      webserial: ['https://bipes.net.br/beta2/ui', 'the HTTPS version'],
-      websocket: ['http:///bipes.net.br/beta2/ui', 'the HTTP version'],
-      webbluetooth: ['https://bipes.net.br/beta2/ui', 'the HTTPS version']
-    }
+    this.ifunavailable = {};
   }
 	/**
    * Switch the target protocol if available, see mux.constructor

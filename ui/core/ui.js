@@ -506,7 +506,6 @@ class workspace {
 	  this.loadButton.addEventListener ('change', () => {this.loadXML ()});
 
     this.resetBoard = get('#resetBoard');
-    this.EasyMQTT_bridge = get('#EasyMQTT_bridge');
     this.term = get('#term');
     this.file_status = get('#file-status');
     this.put_file_select = get('#put-file-select');
@@ -733,13 +732,13 @@ workspace.prototype.writeWorkspace = function (xml, prettyText) {
     databoard = '';
   /** Can't acess iFrame running locally due to cross-origin policy in Chrome*/
   try {
-    freeboard = JSON.stringify(window.frames[1].freeboard.serialize());
+    freeboard = JSON.stringify(window.frames[0].freeboard.serialize());
     /** Check if freeboard is empty */
     if (freeboard == "{\"version\":1,\"allow_edit\":true,\"plugins\":[],\"panes\":[],\"datasources\":[{\"name\":\"vars\",\"type\":\"core_scratchpad_plugin\",\"settings\":{\"data\":\"={}\",\"persist\":\"off\",\"lock\":false}}],\"columns\":3}")
       freeboard='';
   } catch (e) {}
   try {
-    databoard = window.frames[3].modules.Workspaces.compress();
+    databoard = window.frames[1].modules.Workspaces.compress();
   } catch (e) {}
 
   xml = xml.replace(/(xmlns=")(?:.+?)(")/g, '$1https://bipes.net.br$2')
@@ -795,14 +794,14 @@ workspace.prototype.loadFreeboard = function (JSON_) {
   try {
     let freeboard = JSON.parse(JSON_)
     /** Test if iframe is a freeboard */
-    if (/\/freeboard/.test(window.frames[1].location.pathname)) {
-      if (typeof  window.frames[1].freeboard == 'object') {
-        window.frames[1].freeboard.loadDashboard(freeboard);
+    if (/\/freeboard/.test(window.frames[0].location.pathname)) {
+      if (typeof  window.frames[0].freeboard == 'object') {
+        window.frames[0].freeboard.loadDashboard(freeboard);
       } else {
         /** wait to freeboard iframe to load */
         var interval = setInterval(() => {
-          if (typeof  window.frames[1].freeboard == 'object') {
-            window.frames[1].freeboard.loadDashboard(freeboard);
+          if (typeof  window.frames[0].freeboard == 'object') {
+            window.frames[0].freeboard.loadDashboard(freeboard);
             clearInterval(interval);
           }
         }, 500);
@@ -822,20 +821,20 @@ workspace.prototype.loadDataboard = function (JSON_) {
   try {
     let databoard = JSON.parse(JSON_)
     /** Test if iframe is a freeboard */
-    if (/\/databoard/.test(window.frames[3].location.pathname)) {
-      if (typeof window.frames[3].modules == 'object') {
-        window.frames[3].modules.Workspaces.deinit()
-        window.frames[3].modules.Workspaces.clearLocalStorage();
-        window.frames[3].modules.Workspaces.uncompress(databoard);
+    if (/\/databoard/.test(window.frames[1].location.pathname)) {
+      if (typeof window.frames[1].modules == 'object') {
+        window.frames[1].modules.Workspaces.deinit()
+        window.frames[1].modules.Workspaces.clearLocalStorage();
+        window.frames[1].modules.Workspaces.uncompress(databoard);
         if (get('#tab_databoard').classList.contains("on"))
-          window.frames[3].modules.Workspaces.init()
+          window.frames[1].modules.Workspaces.init()
       } else {
         /** wait to databoard iframe to load */
         var interval = setInterval(() => {
-          if (typeof window.frames[3].mopdules == 'object') {
-            window.frames[3].modules.Workspaces.deinit()
-            window.frames[3].modules.Workspaces.clearLocalStorage();
-            window.frames[3].modules.Workspaces.uncompress(databoard);
+          if (typeof window.frames[1].mopdules == 'object') {
+            window.frames[1].modules.Workspaces.deinit()
+            window.frames[1].modules.Workspaces.clearLocalStorage();
+            window.frames[1].modules.Workspaces.uncompress(databoard);
             clearInterval(interval);
           }
         }, 500);
