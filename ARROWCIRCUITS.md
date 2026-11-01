@@ -14,5 +14,5 @@ It is served as static files at https://bipes.arrowcircuits.com. The commit that
 - Service worker disabled (`pwa-update` import, `manup.js`, `pwabuilder-sw.js` removed); `manifest.json` is still linked. Without it, deploys are not held back by a cached copy.
 - `.gitmodules` uses `https://github.com/BIPES/...` URLs so clones work without SSH keys.
 - About text: added a sentence identifying this build and linking to this branch.
-- `web.config` added for IIS 10: MIME types for every deployed file extension, no-cache revalidation, `index.html` as the default document.
+- `web.config` added for IIS 10: an HTTP to HTTPS 301 redirect (URL Rewrite), MIME types for every deployed file extension, no-cache revalidation, `index.html` as the default document.
 - Because the shared-programs and EasyMQTT iframes are gone, the iframe indexes used for the IoT dashboard and Databoard in `ui/core/*.js` were renumbered.
