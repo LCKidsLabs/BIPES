@@ -16,3 +16,12 @@ It is served as static files at https://bipes.arrowcircuits.com. The commit that
 - About text: added a sentence identifying this build and linking to this branch.
 - `web.config` added for IIS 10: an HTTP to HTTPS 301 redirect (URL Rewrite), MIME types for every deployed file extension, no-cache revalidation, `index.html` as the default document.
 - Because the shared-programs and EasyMQTT iframes are gone, the iframe indexes used for the IoT dashboard and Databoard in `ui/core/*.js` were renumbered.
+
+## Portal sign-in (`ui/core/arc-portal.js`)
+
+Adds a small sign-in control to the account panel (`#arc_signin`, under the "Hello, User!" line; the editable `#account_user` nickname is separate and untouched). It asks the Arrow Circuits portal who is signed in (`GET {portalBase}/api/portal/me`, with credentials) and shows "Sign in" or "Signed in as <name>" with a "Sign out" link. Both links are plain navigations to the portal, which returns to the current editor page (origin and path only; the hash is dropped).
+
+- Config block at the top of the file: `portalBase` (default `https://arrowcircuits.com`). No other settings.
+- Public surface: `window.arcPortal.user` (last answer or null), `refresh()` (returns a promise, never rejects), `onChange(callback)`.
+- It refreshes when the DOM is ready, on `pageshow` from the back/forward cache, and when the tab becomes visible again. If the portal is unreachable it shows the signed-out control and logs one `console.warn`.
+- For now it only reads who-am-I. Account-linked features come in a later phase. The panel text is English inline; the account panel is not translated in BIPES.

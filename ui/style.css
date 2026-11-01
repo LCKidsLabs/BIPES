@@ -1005,3 +1005,13 @@ button.icon.medium:before  {
     font-weight: bold;
     padding-bottom: .125rem;
 }
+
+#arc_signin {
+  margin: .5em 0 1em;
+  font-size: .9rem;
+}
+
+#arc_signin a {
+  font-weight: bold;
+  margin-left: .25em;
+}
