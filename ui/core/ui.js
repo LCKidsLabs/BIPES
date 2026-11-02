@@ -50,10 +50,10 @@ function account (button_, panel_) {
   this.newProjectButton = get('#newProjectButton');
   this.dom_username = get('#account_user');
   this.dom_username.addEventListener("input", () => {localStorage.setItem('account_user', this.dom_username.innerText)});
-  this.newProjectButton.onclick = () => {this.newProject ()};
+  this.newProjectButton.onclick = () => {BlocklyStorage.newProject ()};
 
+  /** The open project; the id is kept in step by BlocklyStorage. */
   this.currentProject = {uid:'', xml:''};
-	this.projects = [];
 
 	if (localStorage ['account_user']) {
 	  this.dom_username.innerText = localStorage ['account_user'];
@@ -62,176 +62,77 @@ function account (button_, panel_) {
 	}
 }
 /**
- * Check if project  listed in localStorage's item `bipes_projects` is stored in localStorage
- * and then list it in the account panel. If not, the item is discarted.
- * @param {Object} projects_ - parsed JSON from localStorage's item `bipes_projects`.
+ * Fetch the member's projects from the portal (newest saved first) and list them.
+ * A failure leaves the list as it was.
  */
-account.prototype.restoreProjects = function (projects_) {
-  this.projects = projects_;
-  for (const prop in this.projects) {
-    if (localStorage[prop]) {
-      this.listProject (prop, this.projects[prop])
-    } else {
-      delete this.projects[prop]
-    }
-  }
-}
-
-/**
- * Open last edited project
- */
-account.prototype.openLastEdited = function () {
-  this.currentProject.uid  = Object.keys(this.projects).reduce((a, b) => (this.projects[a] > this.projects[b]) ? a : b);
-  this.currentProject.xml = localStorage[this.currentProject.uid];
-
-  getIn(this.projectList, `#${this.currentProject.uid}`).className = 'current';
-
-  var xml = UI ['workspace'].readWorkspace (this.currentProject.xml, false);
-  Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), Blockly.getMainWorkspace());
+account.prototype.refreshList = function () {
+  return arcPortal.projects.list ().then ((res) => {
+    this.projectList.textContent = '';
+    ((res && res.items) || []).forEach ((item) => {this.listProject (item)});
+    this.markCurrent (this.currentProject.uid);
+  }, () => {});
 }
 
 /**
  * List project in the account panel.
- * @param {string} uid - UID of the project
- * @param {string} timestamp - Timestamp for the project
+ * @param {Object} item - project list item from the portal (id, name, savedUtc, createdAtUtc).
  */
-account.prototype.listProject = function (uid, timestamp) {
-    let project_name = this.getProjectName_ (uid);
-    timestamp = Tool.unix2date(timestamp);
+account.prototype.listProject = function (item) {
+    let uid = item.id;
+    let project_name = item.name || 'Untitled project';
+    let created = item.createdAtUtc ? new Date (item.createdAtUtc).toLocaleString () : '';
     let short_project_name = project_name.length > 30 ? `${project_name.substring(0,27)}...` : project_name;
-    let wrapper2_ = new DOM ('div', {'id':uid});
-    let openButton_ = new DOM ('div', {innerText:short_project_name, className: 'runText', title:`Open project ${project_name}, created at ${timestamp}`})
-        .onclick (this, this.openProject, [uid])
-    let deleteButton_ = new DOM ('span', {className:'icon', id:'trashIcon', title:`Delete project ${project_name}`})
-        .onclick (this, this.deleteProject, [uid])
-    let downloadButton_ = new DOM ('span', {className:'icon', id:'downloadIcon', title:`Download project ${project_name}`})
-        .onclick (this, UI ['workspace'].saveXML, [uid])
+    let wrapper2_ = document.createElement ('div');
+    wrapper2_.setAttribute ('data-id', uid);
+    let openButton_ = document.createElement ('div');
+    openButton_.className = 'runText';
+    openButton_.innerText = short_project_name;
+    openButton_.title = `Open project ${project_name}, created at ${created}. Double-click to rename.`;
+    openButton_.onclick = () => {BlocklyStorage.openProject (uid)};
+    openButton_.ondblclick = () => {
+      let name = window.prompt ('Rename project', project_name);
+      if (name != null) BlocklyStorage.renameProject (uid, name);
+    };
+    let deleteButton_ = document.createElement ('span');
+    deleteButton_.className = 'icon';
+    deleteButton_.id = 'trashIcon';
+    deleteButton_.title = `Delete project ${project_name}`;
+    deleteButton_.onclick = () => {BlocklyStorage.deleteProject (uid)};
+    let downloadButton_ = document.createElement ('span');
+    downloadButton_.className = 'icon';
+    downloadButton_.id = 'downloadIcon';
+    downloadButton_.title = `Download project ${project_name}`;
+    downloadButton_.onclick = () => {UI ['workspace'].saveXML (uid)};
 
-    let wrapper_ = new DOM ('div')
-        .append([downloadButton_, deleteButton_])
-    wrapper2_.append([openButton_, wrapper_])
-    this.projectList.append(wrapper2_._dom)
+    let wrapper_ = document.createElement ('div');
+    wrapper_.append (downloadButton_, deleteButton_);
+    wrapper2_.append (openButton_, wrapper_);
+    this.projectList.append (wrapper2_);
 }
 /**
- * Open project.
- * @param {string} uid - UID of the project to be opened.
+ * Highlight the open project in the list.
+ * @param {string} uid - id of the open project.
  */
-account.prototype.openProject = function (uid) {
-  if (this.currentProject.uid != '') {
-    BlocklyStorage.backupBlocks_ ();
-    try {getIn(this.projectList, `#${this.currentProject.uid}`).className = ''} catch (e) {};
-  }
-  let xml = localStorage[uid];
-
-  this.currentProject.uid = uid;
-  this.currentProject.xml = xml;
-
-  getIn(this.projectList, `#${uid}`).className = 'current';
-
-  this.projects[uid] = +new Date();
-
-  BlocklyStorage.loadXml_ (xml, Blockly.getMainWorkspace());
-  Files.handleCurrentProject ();
+account.prototype.markCurrent = function (uid) {
+  this.projectList.querySelectorAll ('[data-id]').forEach ((row) => {
+    row.className = row.getAttribute ('data-id') == uid ? 'current' : '';
+  });
 }
 /**
- * Delete project.
- * @param {string} uid - UID of the project to be deleted.
+ * Show a new name for a project in the list.
+ * @param {string} uid - project id.
+ * @param {string} name - project name.
  */
-account.prototype.deleteProject = function (uid) {
-  localStorage.removeItem (uid);
-  delete this.projects[uid];
-  localStorage.setItem('bipes_projects', JSON.stringify(this.projects))
-
-  getIn(this.projectList, `#${uid}`).remove();
-
-  if (this.currentProject.uid == uid) {
-    this.currentProject.uid = '';
-    this.currentProject.xml = '';
-    if (Object.keys(this.projects).length == 0) {
-      this.newProject ();
-    } else {
-      this.openProject (Object.keys(this.projects).reduce((a, b) => (this.projects[a] > this.projects[b]) ? a : b));
-    }
-  }
-}
-/**
- * Get project name from XML stored in localStorage.
- * @param {string} uid - UID of the project.
- */
-account.prototype.getProjectName_ = function (uid) {
-  let xml = localStorage[uid];
-  let project_name = '';
-  let regex_ = /<value name="project_description">.*?<\/value>/;
-  if (regex_.test(xml)) {
-    let project_description_chunk = xml.match (regex_) [0];
-    project_name = project_description_chunk.match (/<field name="TEXT">(.*?)<\/field>/)[1].slice();
-  } else {
-    project_name = "My BIPES Project";
-  }
-  return project_name;
-}
-/**
- * Create new project and open it.
- */
-account.prototype.newProject = function () {
-  if (this.currentProject.uid != '') {
-    BlocklyStorage.backupBlocks_ ();
-    try{getIn(this.projectList, `#${this.currentProject.uid}`).className = ''} catch (e) {};
-  }
-
-  let emptyXML = Tool.emptyXML ();
-  let uid = Tool.uid ();
-  this.projects [uid] = +new Date ();
-  localStorage.setItem('bipes_projects', JSON.stringify(this.projects))
-  localStorage.setItem (uid, emptyXML)
-
-  this.currentProject.uid = uid;
-  this.currentProject.xml = emptyXML;
-
-  this.listProject (uid, this.projects [uid]);
-
-  BlocklyStorage.loadXml_ (emptyXML, Blockly.getMainWorkspace());
-
-  getIn(this.projectList, `#${uid}`).className = 'current';
-}
-/**
- * Import a project to localStorage.
- * @param {string} xml - XML of the project to be imported.
- */
-account.prototype.importProject = function (xml) {
-  if (this.currentProject.uid != '') {
-    BlocklyStorage.backupBlocks_ ();
-    try{getIn(this.projectList, `#${this.currentProject.uid}`).className = ''} catch (e) {};
-  }
-  let uid = Tool.uid ();
-  this.projects [uid] = +new Date ();
-  localStorage.setItem('bipes_projects', JSON.stringify(this.projects))
-  localStorage.setItem (uid, xml);
-
-  this.currentProject.uid = uid;
-  this.currentProject.xml = xml;
-
-  this.listProject (uid, this.projects [uid]);
-
-  BlocklyStorage.loadXml_ (xml, Blockly.getMainWorkspace());
-
-  getIn(this.projectList, `#${uid}`).className = 'current';
-}
-/**
- * Set current project name from block to the account panel.
- * @param {string} str_ - Project name to be displayed in the account panle.
- */
-account.prototype.setCurrentProjectName_ = function (str_) {
-  let short_project_name = str_.length > 30 ? `${str_.substring(0,27)}...` : str_;
-
-  let a_ = getIn(this.projectList, `#${this.currentProject.uid}`);
-  let b_ = getIn(a_, '.runText')
-  b_.innerText = short_project_name;
-  b_.title = `Open project ${str_}.`;
+account.prototype.setProjectLabel = function (uid, name) {
+  let row = this.projectList.querySelector (`[data-id="${uid}"]`);
+  if (!row) return;
+  let b_ = getIn (row, '.runText');
+  b_.innerText = name.length > 30 ? `${name.substring(0,27)}...` : name;
+  b_.title = `Open project ${name}. Double-click to rename.`;
 }
 
 account.prototype.onOpenPanel_ = function () {
-   this.setCurrentProjectName_(Tool.makeAName(Code.generateCode(), ''));
+   this.refreshList ();
 }
 
 channelPanel.prototype = Object.create (panel.prototype);
@@ -636,17 +537,26 @@ workspace.prototype.changeTo = function (device) {
  * @param {string} uid - optional uid to download a specific project, if none, the current will be downloaded.
  */
 workspace.prototype.saveXML = function (uid) {
-  let xmlText = '';
-  let rawXml = '';
   if (uid == undefined) {
-    rawXml = Blockly.Xml.workspaceToDom(Code.workspace).innerHTML;
-    xmlText = Blockly.Xml.domToPrettyText(Blockly.Xml.workspaceToDom(Code.workspace));
-    xmlText = this.writeWorkspace (xmlText, true);
+    let rawXml = Blockly.Xml.workspaceToDom(Code.workspace).innerHTML;
+    let xmlText = Blockly.Xml.domToPrettyText(Blockly.Xml.workspaceToDom(Code.workspace));
+    this.downloadXML_ (this.writeWorkspace (xmlText, true), rawXml);
   } else {
-    // Bounce in Blockly to make Pretty Text formatting
-    xmlText = Blockly.Xml.domToPrettyText(Blockly.Xml.textToDom(localStorage [uid]));
+    // Any project from the list: the open one comes from the editor, the rest from the portal.
+    BlocklyStorage.projectXml (uid).then ((xml) => {
+      // Bounce in Blockly to make Pretty Text formatting
+      this.downloadXML_ (Blockly.Xml.domToPrettyText(Blockly.Xml.textToDom(xml)), xml);
+    }, () => {
+      UI ['notify'].send ('Could not download that project from Arrow Circuits.');
+    });
   }
-
+}
+/**
+ * Offer XML text as a .bipes.xml download.
+ * @param {string} xmlText - pretty XML to write to the file.
+ * @param {string} rawXml - XML used to find the project name for the file name.
+ */
+workspace.prototype.downloadXML_ = function (xmlText, rawXml) {
   let project_name = '';
   let regex_ = /<value name="project_description">.*?<\/value>/;
   if (regex_.test(rawXml)) {
@@ -762,20 +672,17 @@ workspace.prototype.loadXML = function () {
       reader.readAsText(file,'UTF-8');
       let self = this;
       reader.onload = readerEvent => {
-        let content = this.readWorkspace (readerEvent.target.result, true);
+        // An imported file becomes a new project on the portal.
         try {
-          let xml = Blockly.Xml.textToDom(content);
-          Blockly.Xml.domToWorkspace(xml, Code.workspace);
+          Blockly.Xml.textToDom(readerEvent.target.result);
         }
         catch (e) {
           UI ['notify'].log(e)
-          if (/Error: Variable id, (.*) is already in use\.$/.test(e))
-            UI ['notify'].send (`Unique variable is already in use, could not load ${file.name}.`);
-          else
-            UI ['notify'].send (`Failed to parse data, could not load ${file.name}.`);
+          UI ['notify'].send (`Failed to parse data, could not load ${file.name}.`);
           this.loadButton.value = ''
           return;
         }
+        BlocklyStorage.importProject (readerEvent.target.result, file.name);
         UI ['notify'].send (MSG['blocksLoadedFromFile'].replace('%1', file.name));
         this.loadButton.value = ''
       }

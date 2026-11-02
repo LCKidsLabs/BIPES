@@ -101,25 +101,22 @@ Code.loadBlocks = function(defaultXml) {
   // wait to devices to load
   var interval_ = setInterval(() => {
     if (typeof UI != 'undefined' && UI ['workspace'].devices.constructor.name == 'Object') {
-      if ('BlocklyStorage' in window && window.location.hash.length > 1) {
-        BlocklyStorage.restoreBlocks ();
-        Code.importFromShareLink(window.location.hash.substring(1));
-      } else if (loadOnce) {
-        // Language switching stores the blocks during the reload.
-        delete window.sessionStorage.loadOnceBlocks;
-        var xml = Blockly.Xml.textToDom(loadOnce);
-        Blockly.Xml.domToWorkspace(xml, Code.workspace);
-      } else if (defaultXml) {
-        // Load the editor with default starting blocks.
-        var xml = Blockly.Xml.textToDom(defaultXml);
-        Blockly.Xml.domToWorkspace(xml, Code.workspace);
-      } else if ('BlocklyStorage' in window) {
-        // Restore saved blocks in a separate thread so that subsequent
-        // initialization is not affected from a failed load.
-        if (typeof UI != 'undefined' && UI ['workspace'].devices.constructor.name == 'Object') {
-              window.setTimeout(() => {BlocklyStorage.restoreBlocks (); UI ['account'].openLastEdited()}, 0);
-        } else {
-              window.setTimeout(() => {BlocklyStorage.restoreBlocks (); UI ['account'].openLastEdited()}, 0);
+      if ('BlocklyStorage' in window) {
+        // Resume the current project from the portal once the sign-in gate clears.
+        // Blocks kept across a language switch, or default blocks, go on top of it.
+        var carried = null;
+        if (window.location.hash.length <= 1) {
+          if (loadOnce) {
+            // Language switching stores the blocks during the reload.
+            delete window.sessionStorage.loadOnceBlocks;
+            carried = loadOnce;
+          } else if (defaultXml) {
+            carried = defaultXml;
+          }
+        }
+        BlocklyStorage.start (carried);
+        if (window.location.hash.length > 1) {
+          Code.importFromShareLink(window.location.hash.substring(1));
         }
       }
       clearInterval(interval_);
@@ -564,11 +561,6 @@ Code.init = function() {
       });
 
   Code.loadBlocks('');
-
-  if ('BlocklyStorage' in window) {
-    // Hook a save function onto unload.
-    BlocklyStorage.backupOnUnload(Code.workspace);
-  }
 
   Code.handleLink(Code.current[0], 0);
 

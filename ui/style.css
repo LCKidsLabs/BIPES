@@ -1015,3 +1015,108 @@ button.icon.medium:before  {
   font-weight: bold;
   margin-left: .25em;
 }
+
+/* Sign-in gate, save status and stale bar (arc-portal.js, storage.js) */
+#arc_gate {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .97);
+  color: #333;
+}
+
+#arc_gate .arc-gate-card {
+  max-width: 24rem;
+  margin: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: .5rem;
+  background: #fff;
+  box-shadow: 0 .125em .5em rgba(0, 0, 0, .2);
+}
+
+#arc_gate h2 {
+  margin: 0 0 .75rem;
+  font-size: 1.25rem;
+}
+
+#arc_gate p {
+  margin: 0 0 1rem;
+  font-size: .9rem;
+}
+
+#arc_gate .arc-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: center;
+}
+
+#arc_gate .arc-gate-button {
+  display: inline-block;
+  padding: .5rem 1rem;
+  border: 1px solid #3298dc;
+  border-radius: 2rem;
+  background: #3298dc;
+  color: #fff;
+  font: inherit;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.arc-save-status {
+  position: fixed;
+  left: .75rem;
+  bottom: .5rem;
+  z-index: 50;
+  padding: .125rem .625rem;
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  background: #fff;
+  color: #555;
+  font-size: .8rem;
+  pointer-events: none;
+}
+
+.arc-save-status[data-state="offline"],
+.arc-save-status[data-state="unsaved"],
+.arc-save-status[data-state="toolarge"],
+.arc-save-status[data-state="unreadable"] {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.arc-stale-bar {
+  position: fixed;
+  top: 3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .375rem .75rem;
+  border: 1px solid #c0392b;
+  border-radius: .5rem;
+  background: #fff;
+  font-size: .9rem;
+  box-shadow: 0 .125em .5em rgba(0, 0, 0, .2);
+}
+
+.arc-stale-bar button {
+  padding: .125rem .75rem;
+  border: 1px solid #3298dc;
+  border-radius: 1rem;
+  background: #3298dc;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
