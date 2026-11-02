@@ -79,11 +79,14 @@ Code.isRtl = function() {
 };
 
 /**
- * Placeholder for importing a project from a #key share link; does nothing yet.
+ * Import a project from a #token share link: the storage layer copies it into
+ * the member's projects once the editor has booted. Anything that is not a
+ * share token is ignored.
  * @param {string} key Key from the URL hash.
  */
 Code.importFromShareLink = function(key) {
-  // Share-link import will plug in here.
+  if (!/^[A-Za-z0-9_-]{22}$/.test(key)) return;
+  BlocklyStorage.openShared(key);
 };
 
 /**

@@ -28,8 +28,9 @@
   };
 
   /**
-   * Absolute URL of the current editor page, without query or hash
-   * (the hash will carry share tokens later).
+   * Absolute URL of the current editor page, without query or hash. Used for
+   * Sign out and the forbidden gate; the signed-out Sign in link and gate button
+   * use loginUrl_, which keeps the hash so a #shareToken survives signing in.
    * @return {string}
    */
   function returnUrl_ () {
@@ -199,7 +200,13 @@
     save: function (id, body, opts) { return request_('PUT', projectsUrl_('/' + id_(id)), body, opts); },
     rename: function (id, name) { return request_('PUT', projectsUrl_('/' + id_(id) + '/name'), {name: name}); },
     remove: function (id) { return request_('DELETE', projectsUrl_('/' + id_(id))); },
-    setCurrent: function (id) { return request_('PUT', projectsUrl_('/current/' + id_(id))); }
+    setCurrent: function (id) { return request_('PUT', projectsUrl_('/current/' + id_(id))); },
+    /** @return {!Promise} {id, shareToken}; idempotent. */
+    share: function (id) { return request_('POST', projectsUrl_('/' + id_(id) + '/share')); },
+    /** Turn sharing off (204); sharing again makes a new token. */
+    unshare: function (id) { return request_('DELETE', projectsUrl_('/' + id_(id) + '/share')); },
+    /** @return {!Promise} {name, board, xml, ownerDisplayName} of a shared project. */
+    shared: function (token) { return request_('GET', projectsUrl_('/shared/' + encodeURIComponent(token))); }
   };
 
   // ----------------------------------------------------------------------- gate

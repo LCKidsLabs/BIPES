@@ -1120,3 +1120,50 @@ button.icon.medium:before  {
   font: inherit;
   cursor: pointer;
 }
+
+/* Share-by-link control in the account panel (storage.js) */
+.arc-share {
+  margin: .5rem 0;
+}
+
+.arc-share[hidden],
+.arc-share [hidden] {
+  display: none;
+}
+
+.arc-share-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .375rem;
+}
+
+.arc-share-link {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: .25rem .5rem;
+  border: 1px solid #ccc;
+  border-radius: .25rem;
+  font-size: .85rem;
+}
+
+.arc-share-button {
+  padding: .125rem .75rem;
+  border: 1px solid #3298dc;
+  border-radius: 1rem;
+  background: #3298dc;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.arc-share-button:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+.arc-share-note {
+  margin-top: .25rem;
+  font-size: .75rem;
+  opacity: .75;
+}

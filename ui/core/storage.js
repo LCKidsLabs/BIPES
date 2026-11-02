@@ -46,6 +46,9 @@ var BlocklyStorage = {};
     forbidden: false,
     unreadable: false,  // the loaded XML could not be parsed: never save over it
     override: null,
+    shareToken: null,   // share token of the open project, or null
+    sharing: false,     // a share/unshare call is in flight
+    pendingShare: null, // share token from the URL waiting for boot
     status: 'saved'
   };
 
@@ -342,6 +345,7 @@ var BlocklyStorage = {};
     S.stale = false;
     S.unreadable = false;
     S.tooLargeNorm = null;
+    S.shareToken = p.shareToken || null;
     hideStaleBar_ ();
 
     var xml = p.xml || Tool.emptyXML ();
@@ -367,6 +371,9 @@ var BlocklyStorage = {};
       UI ['account'].currentProject.uid = p.id;
       UI ['account'].markCurrent (p.id);
       Files.handleCurrentProject ();
+    } catch (e) {}
+    try {
+      updateShare_ ();
     } catch (e) {}
   }
 
@@ -432,6 +439,7 @@ var BlocklyStorage = {};
       try {
         UI ['account'].refreshList ();
       } catch (e) {}
+      runPendingShare_ ();
     }).catch (function (e) {
       S.booting = false;
       bootFailed_ (e);
@@ -560,6 +568,146 @@ var BlocklyStorage = {};
       });
     });
   });
+
+  /**
+   * Copy a shared project (from a #token link) into the member's projects and
+   * open it. Waits for the project boot; runs at most once per page load.
+   * @param {string} token Share token.
+   */
+  BlocklyStorage.openShared = function (token) {
+    S.pendingShare = token;
+    if (S.booted) runPendingShare_ ();
+  };
+
+  function runPendingShare_ () {
+    var token = S.pendingShare;
+    if (!token) return;
+    S.pendingShare = null;
+    importShared_ (token);
+  }
+
+  function clearHash_ () {
+    try {
+      history.replaceState (null, '', location.pathname + location.search);
+    } catch (e) {}
+  }
+
+  var importShared_ = guarded_ (function (token) {
+    return leaveCurrent_ ().then (function (go) {
+      if (!go) return;
+      return arcPortal.projects.shared (token).then (function (shared) {
+        var name = shared.name || 'Shared project';
+        var owner = shared.ownerDisplayName || '';
+        return arcPortal.projects.create ({
+          name: name,
+          board: shared.board || UI ['workspace'].selector.value,
+          xml: shared.xml,
+          python: null
+        }).then (function (p) {
+          loadProject_ (p);
+          clearHash_ ();
+          UI ['account'].refreshList ();
+          say_ ('Copied “' + name + '”' + (owner ? ' by ' + owner : '') + ' into your projects.');
+        });
+      }, function (e) {
+        if (e && e.status === 404 && e.code === 'shareNotFound') {
+          clearHash_ ();
+          say_ ('This share link doesn’t work anymore. The owner may have turned sharing off.');
+        } else if (e && e.status === 429) {
+          say_ ('Too many requests. Wait a minute and reload the page to try the link again.');
+        } else {
+          throw e;
+        }
+      });
+    });
+  });
+
+  // -------------------------------------------------------------- share control
+
+  var shareBox = null;
+  var shareParts = null;
+
+  function shareLink_ () {
+    return location.origin + location.pathname + '#' + S.shareToken;
+  }
+
+  function buildShare_ () {
+    var list = document.getElementById ('ProjectList');
+    if (!list || !list.parentNode) return false;
+    shareBox = el_ ('div', 'arc-share');
+    var share = el_ ('button', 'arc-share-button', 'Share by link');
+    share.type = 'button';
+    share.onclick = function () { setShared_ (true); };
+    var row = el_ ('div', 'arc-share-row');
+    var input = el_ ('input', 'arc-share-link');
+    input.type = 'text';
+    input.readOnly = true;
+    input.setAttribute ('aria-label', 'Share link');
+    input.onfocus = function () { input.select (); };
+    var copy = el_ ('button', 'arc-share-button', 'Copy link');
+    copy.type = 'button';
+    copy.onclick = copyLink_;
+    var stop = el_ ('button', 'arc-share-button', 'Stop sharing');
+    stop.type = 'button';
+    stop.onclick = function () {
+      if (window.confirm ('Stop sharing? The current link will stop working.')) setShared_ (false);
+    };
+    row.appendChild (input);
+    row.appendChild (copy);
+    row.appendChild (stop);
+    var note = el_ ('div', 'arc-share-note',
+      'Anyone signed in to Arrow Circuits with the link gets their own copy. Your display name is shown with it.');
+    shareBox.appendChild (share);
+    shareBox.appendChild (row);
+    shareBox.appendChild (note);
+    list.parentNode.insertBefore (shareBox, list);
+    shareParts = {share: share, row: row, input: input, copy: copy, stop: stop};
+    return true;
+  }
+
+  /** Bring the share control in step with S.id, S.shareToken and S.sharing. */
+  function updateShare_ () {
+    if (!shareBox && !buildShare_ ()) return;
+    shareBox.hidden = !S.id;
+    var shared = !!S.shareToken;
+    shareParts.share.hidden = shared;
+    shareParts.row.hidden = !shared;
+    if (shared) shareParts.input.value = shareLink_ ();
+    shareParts.share.disabled = shareParts.copy.disabled = shareParts.stop.disabled = S.sharing;
+  }
+
+  function copyLink_ () {
+    var input = shareParts.input;
+    var done = function () { say_ ('Link copied.'); };
+    var fallback = function () {
+      try {
+        input.focus ();
+        input.select ();
+        if (document.execCommand ('copy')) done ();
+      } catch (e) {}
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText (input.value).then (done, fallback);
+    } else {
+      fallback ();
+    }
+  }
+
+  function setShared_ (on) {
+    var id = S.id;
+    if (!id || S.sharing) return;
+    S.sharing = true;
+    updateShare_ ();
+    var call = on ? arcPortal.projects.share (id) : arcPortal.projects.unshare (id);
+    call.then (function (res) {
+      if (S.id === id) S.shareToken = on ? (res && res.shareToken) || null : null;
+    }, function (e) {
+      apiFail_ (e);
+    }).then (function () {
+      S.sharing = false;
+      updateShare_ ();
+    });
+  }
 
   /** Delete a project; if it was open, open the most recent other one or a new one. */
   BlocklyStorage.deleteProject = guarded_ (function (id) {
