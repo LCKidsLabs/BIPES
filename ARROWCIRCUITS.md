@@ -18,6 +18,17 @@ It is served as static files at https://bipes.arrowcircuits.com. The commit that
 - `web.config` added for IIS 10: an HTTP to HTTPS 301 redirect (URL Rewrite), MIME types for every deployed file extension, no-cache revalidation, `index.html` as the default document.
 - Because the shared-programs and EasyMQTT iframes are gone, the iframe indexes used for the IoT dashboard and Databoard in `ui/core/*.js` were renumbered.
 
+## HippaFone handset board
+
+Adds a board for the Adafruit ESP32-S3 Feather (product 5477) with the 3.5 inch capacitive TFT FeatherWing (product 5872), running MicroPython.
+
+- Board id `FEATHER_S3_MPY`: an entry in `ui/devinfo/devinfo.json`, a line in the device list in `ui/index.html`, and the picture `ui/devinfo/hippafone.svg`.
+- Toolbox `ui/toolbox/hippafone.xml`: the stock Logic, Loops, Math, Text, Lists, Variables and Functions categories plus Timing and HippaFone. It offers no stock hardware blocks, so only the `hippa_*` blocks touch the hardware.
+- Blocks `ui/core/hippa_blocks.js`, loaded after `core/generator_stubs.js`: screen title, write and clear; radio send and new message; BOOT button pressed and held; light and light off; line typed on the computer; wait; seconds now; forever. Each one generates a call into the helper library, with `import hippa` at the top of the program.
+- Helper library `ui/pylibs/hippa.py`, `hippa_io.py` and `hippa_screen.py`, described in `ui/pylibs/README-hippa.md`. The editor does not put these files on the board yet: until they are on it, a program stops with an ImportError.
+
+These blocks have only been tested off the board, with mock hardware and in a headless browser.
+
 ## Portal sign-in (`ui/core/arc-portal.js`)
 
 Adds a small sign-in control to the account panel (`#arc_signin`, under the "Hello, User!" line; the editable `#account_user` nickname is separate and untouched). It asks the Arrow Circuits portal who is signed in (`GET {portalBase}/api/portal/me`, with credentials) and shows "Sign in" or "Signed in as <name>" with a "Sign out" link. Both links are plain navigations to the portal, which returns to the current editor page. Sign in (and the gate's Sign in button) returns to the full address, hash included, so a share link survives signing in; Sign out returns to origin and path only.

@@ -28,6 +28,35 @@
 			],
 			"serial_packet_size":"500"
 		},
+		"FEATHER_S3_MPY": {
+			"title":"<b>HippaFone handset</b><br>",
+			"speed":"115200",
+			"boardID":"FEATHER_S3_MPY",
+			"img":"devinfo/hippafone.svg",
+			"description":"<BR><BR>HippaFone handset (Adafruit ESP32-S3 Feather with the 3.5 inch TFT FeatherWing, MicroPython)",
+			"toolbox":"hippafone.xml",
+			"pinout": [
+		    ["BOOT / GPIO0 (button)", "0"],
+		    ["TX / GPIO39", "39"],
+		    ["RX / GPIO38", "38"],
+		    ["NEOPIXEL / GPIO33", "33"],
+		    ["NEOPIXEL_POWER / GPIO21", "21"],
+		    ["I2C_POWER / GPIO7", "7"],
+		    ["SCK / GPIO36", "36"],
+		    ["MOSI / GPIO35", "35"],
+		    ["MISO / GPIO37", "37"],
+		    ["SDA / GPIO3", "3"],
+		    ["SCL / GPIO4", "4"],
+		    ["D5 / GPIO5 (microSD CS)", "5"],
+		    ["D6 / GPIO6", "6"],
+		    ["D9 / GPIO9 (screen CS)", "9"],
+		    ["D10 / GPIO10 (screen DC)", "10"],
+		    ["D11 / GPIO11", "11"],
+		    ["D12 / GPIO12", "12"],
+		    ["D13 / GPIO13", "13"]
+			],
+			"serial_packet_size":"100"
+		},
 		"ESP32C3": {
 			"title":"<b>ESP32 C3</b><br>",
 			"speed":"115200",
