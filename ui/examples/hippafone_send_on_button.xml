@@ -1,5 +1,0 @@
-<xml xmlns="https://bipes.net.br">
-  <workspace><field name="DEVICE">FEATHER_S3_MPY</field></workspace>
-  <variables></variables>
-  <block type="hippa_screen_clear" id="b363" x="60" y="60"><next><block type="hippa_screen_title" id="b365"><value name="TEXT"><block type="text" id="b364"><field name="TEXT">Messenger</field></block></value><next><block type="hippa_forever" id="b372"><statement name="DO"><block type="controls_if" id="b371"><value name="IF0"><block type="hippa_button_pressed" id="b366"></block></value><statement name="DO0"><block type="hippa_radio_send" id="b368"><value name="TEXT"><block type="text" id="b367"><field name="TEXT">hi from me</field></block></value><next><block type="hippa_screen_write" id="b370"><value name="TEXT"><block type="text" id="b369"><field name="TEXT">sent: hi from me</field></block></value></block></next></block></statement></block></statement></block></next></block></next></block>
-</xml>

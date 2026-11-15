@@ -445,37 +445,79 @@ Code.checkAllGeneratorFunctionsDefined = function(generator) {
   return valid;
 };
 
-Code.reloadToolbox = function(XML_) {
+/**
+ * True only for a signed-in SiteAdmin or Teacher (portal roles). Everyone else
+ * (signed out, Member, Parent or SchoolAdmin alone, portal unreachable) gets no examples.
+ * @return {boolean}
+ */
+function canLoadExamples() {
+  var u = window.arcPortal && window.arcPortal.user;
+  if (!u || !u.authenticated || !Array.isArray(u.roles)) return false;
+  return u.roles.indexOf('SiteAdmin') !== -1 || u.roles.indexOf('Teacher') !== -1;
+}
+
+/**
+ * Remove every loadExample button and every label marked web-class="arc-examples"
+ * from a toolbox DOM, in place.
+ */
+Code.stripExamples_ = function(toolboxXml) {
+  var nodes = toolboxXml.querySelectorAll('button[callbackKey="loadExample"], label[web-class="arc-examples"]');
+  for (var i = 0; i < nodes.length; i++) nodes[i].parentNode.removeChild(nodes[i]);
+};
+
+Code.reloadToolbox = function(XML_, keepView_) {
+  if (XML_) Code.lastToolboxXML_ = XML_;
+  XML_ = Code.lastToolboxXML_;
+  if (!XML_) return;
+  Code.examplesShown_ = canLoadExamples();
   let toolboxText = new XMLSerializer().serializeToString(XML_).replace(/(^|[^%]){(\w+)}/g,
       function(m, p1, p2) {return p1 + MSG[p2];});
   let toolboxXml = Blockly.Xml.textToDom(toolboxText);
+  if (!Code.examplesShown_) Code.stripExamples_(toolboxXml);
 
   Code.workspace.updateToolbox(toolboxXml);
 
-  Code.workspace.scrollCenter(); // centralize workspace
+  if (!keepView_) Code.workspace.scrollCenter(); // centralize workspace
 }
 
-function loadExampleFromURL(pName){
+/* The examples show up (or go away) when the portal says who is signed in. */
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.arcPortal && typeof window.arcPortal.onChange === 'function') {
+    window.arcPortal.onChange(function() {
+      if (Code.lastToolboxXML_ && Code.workspace && canLoadExamples() !== Code.examplesShown_) {
+        Code.reloadToolbox(null, true);
+      }
+    });
+  }
+});
 
-    var request = new XMLHttpRequest();
-    request.open('GET', './examples/' + pName + '.xml', true);
-    //request.open('GET', 'http://bipes.net.br/beta2/ui/examples/' + pName + '.xml', true);
-    request.send(null);
-    request.onreadystatechange = function () {
-        if (request.readyState === 4 && request.status === 200) {
-            var type = request.getResponseHeader('Content-Type');
-            if (type.indexOf("text") !== 1) {
+/**
+ * Fetch an example's XML text. HippaFone examples come from the portal (SiteAdmin or Teacher
+ * only); other boards' examples are static files. Rejects with an Error whose message is plain.
+ * @return {!Promise<string>}
+ */
+function fetchExampleXml(pName){
+  var url, opts;
+  if (pName.indexOf('hippafone_') === 0) {
+    var base = (window.arcPortal && window.arcPortal.portalBase) || 'https://arrowcircuits.com';
+    url = base + '/api/portal/examples/' + encodeURIComponent(pName);
+    opts = {credentials: 'include', cache: 'no-store'};
+  } else {
+    url = './examples/' + pName + '.xml';
+    opts = {};
+  }
+  return fetch(url, opts).then(function (r) {
+    if (r.status === 401 || r.status === 403) throw new Error('The portal did not allow it. Examples are for teachers. Sign in again if you just became a teacher.');
+    if (r.status === 404) throw new Error('That example was not found.');
+    if (!r.ok) throw new Error('The example could not be loaded (error ' + r.status + ').');
+    return r.text();
+  }, function () {
+    throw new Error('Could not reach the server to load the example. Check your connection and try again.');
+  });
+}
 
-		    //alert(request.responseText);
-
-		    var content = request.responseText;
-                    var xml = Blockly.Xml.textToDom(content);
-                    Blockly.Xml.domToWorkspace(xml, Code.workspace);
-
-                return request.responseText;
-            }
-        }
-    }
+function exampleMessage_(msg) {
+  try { UI['notify'].send(msg); } catch (e) { console.warn(msg); }
 }
 
 /**
@@ -817,23 +859,28 @@ print('Install done.')
 
     Code.workspace.registerButtonCallback('loadExample', function(button) {
 
+	if (!canLoadExamples()) {
+		exampleMessage_('Examples are for teachers.');
+		return;
+	}
+
 	var tmp = button.text_.split(":")[1];
 	var lib = tmp.replace(/\s/g,'');
 
         var msgCon = "This will load Example: " + lib + ". Internet is required for this operation. Important: all blocks on workspace will be lost and replaced by the example blocks. Do you want to continue?";
-	
 
 	if (confirm(msgCon)) {
-		//console.log('Thing was saved to the database.');
-		
-		//Ask for confirmation
-      		//Code.discard(); 
-		//Delete blocks without asking for confirmation
-		Code.workspace.clear();
-
-		Code.renderContent();
-		loadExampleFromURL(lib);
-		Code.renderContent();
+		// Nothing is cleared until the XML has arrived and parsed.
+		fetchExampleXml(lib).then(function (content) {
+			var xml;
+			try { xml = Blockly.Xml.textToDom(content); }
+			catch (err) { throw new Error('The example came back in a form that could not be read.'); }
+			Code.workspace.clear();
+			Blockly.Xml.domToWorkspace(xml, Code.workspace);
+			Code.renderContent();
+		}).catch(function (e) {
+			exampleMessage_(e && e.message ? e.message : 'The example could not be loaded.');
+		});
 	} else {
 		console.log('Example load canceled.');
 	}

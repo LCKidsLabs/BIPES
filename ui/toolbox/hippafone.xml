@@ -88,7 +88,7 @@
       <label text="Windows: python deploy_all_to_adafruit_ESP32-S3_Feather_5477.py"></label>
       <label text="Ubuntu: python3 deploy_all_to_adafruit_ESP32-S3_Feather_5477.py"></label>
       <label text="Then pick the HippaFone board, connect, and build."></label>
-      <label text="Examples"></label>
+      <label text="Examples" web-class="arc-examples"></label>
       <button text="Load example: hippafone_first_program" callbackKey="loadExample"></button>
       <button text="Load example: hippafone_button_and_light" callbackKey="loadExample"></button>
       <button text="Load example: hippafone_send_on_button" callbackKey="loadExample"></button>

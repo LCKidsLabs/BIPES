@@ -1,5 +1,0 @@
-<xml xmlns="https://bipes.net.br">
-  <workspace><field name="DEVICE">FEATHER_S3_MPY</field></workspace>
-  <variables></variables>
-  <block type="hippa_forever" id="b362" x="60" y="60"><statement name="DO"><block type="controls_if" id="b361"><mutation else="1"></mutation><value name="IF0"><block type="hippa_button_down" id="b358"></block></value><statement name="DO0"><block type="hippa_light" id="b359"><field name="COLOUR">#33ff33</field></block></statement><statement name="ELSE"><block type="hippa_light_off" id="b360"></block></statement></block></statement></block>
-</xml>
