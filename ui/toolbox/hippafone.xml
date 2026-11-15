@@ -81,29 +81,93 @@
     <category name="%{BKY_CATVARIABLES}" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
     <category name="%{BKY_CATFUNCTIONS}" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>
     <sep></sep>
-    <category name="Timing" colour="290">
-      <block type="hippa_wait">
-        <value name="SECONDS"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-      </block>
-      <block type="hippa_now"></block>
+    <category name="Setup" colour="290">
+      <label text="Run the setup script once, before your first program (see below)"></label>
+      <button text="Download the HippaFone setup script" callbackKey="downloadHippaSetup"></button>
+      <label text="Run it once, before your first program. It needs Python 3.10 or newer."></label>
+      <label text="Windows: python deploy_all_to_adafruit_ESP32-S3_Feather_5477.py"></label>
+      <label text="Ubuntu: python3 deploy_all_to_adafruit_ESP32-S3_Feather_5477.py"></label>
+      <label text="Then pick the HippaFone board, connect, and build."></label>
+      <button text="Load example: hippafone_phone" callbackKey="loadExample"></button>
     </category>
-    <category name="HippaFone" colour="290">
+    <category name="Screen" colour="290">
       <block type="hippa_screen_title">
         <value name="TEXT"><shadow type="text"><field name="TEXT">HippaFone</field></shadow></value>
       </block>
       <block type="hippa_screen_write">
-        <value name="TEXT"><shadow type="text"><field name="TEXT">hello</field></shadow></value>
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hello</field></shadow></value>
+      </block>
+      <block type="hippa_screen_status">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hello</field></shadow></value>
       </block>
       <block type="hippa_screen_clear"></block>
-      <block type="hippa_radio_message"></block>
-      <block type="hippa_radio_send">
-        <value name="TEXT"><shadow type="text"><field name="TEXT">hi</field></shadow></value>
+      <block type="hippa_screen_redraw"></block>
+      <block type="hippa_screen_rotate"></block>
+      <block type="hippa_screen_width"></block>
+      <block type="hippa_screen_height"></block>
+      <block type="hippa_screen_box">
+        <value name="X"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+        <value name="W"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="H"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
       </block>
+      <block type="hippa_screen_text">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hello</field></shadow></value>
+        <value name="X"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+    </category>
+    <category name="Pictures" colour="290">
+      <block type="hippa_picture_show">
+        <value name="NAME"><shadow type="text"><field name="TEXT">logo.bmp</field></shadow></value>
+      </block>
+      <block type="hippa_picture_show_xy">
+        <value name="NAME"><shadow type="text"><field name="TEXT">logo.bmp</field></shadow></value>
+        <value name="X"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+      <block type="hippa_picture_stop"></block>
+      <block type="hippa_picture_list"></block>
+    </category>
+    <category name="Touch" colour="290">
+      <block type="hippa_touch_tapped"></block>
+      <block type="hippa_touch_down"></block>
+      <block type="hippa_touch_x"></block>
+      <block type="hippa_touch_y"></block>
+    </category>
+    <category name="Keyboard" colour="290">
+      <block type="hippa_typed_line"></block>
+      <block type="hippa_typing"></block>
+      <block type="hippa_bluetooth_keyboard_on"></block>
+      <block type="hippa_bluetooth_keyboard_ready"></block>
+    </category>
+    <category name="Radio" colour="290">
+      <block type="hippa_radio_send">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hello</field></shadow></value>
+      </block>
+      <block type="hippa_radio_message"></block>
+      <block type="hippa_radio_sender"></block>
+      <block type="hippa_radio_words"></block>
+      <block type="hippa_radio_rssi"></block>
+      <block type="hippa_radio_snr"></block>
+    </category>
+    <category name="Light and buttons" colour="290">
+      <block type="hippa_light"></block>
+      <block type="hippa_light_rgb">
+        <value name="R"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="G"><shadow type="math_number"><field name="NUM">128</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">255</field></shadow></value>
+      </block>
+      <block type="hippa_light_flash">
+        <value name="MS"><shadow type="math_number"><field name="NUM">150</field></shadow></value>
+      </block>
+      <block type="hippa_light_off"></block>
       <block type="hippa_button_pressed"></block>
       <block type="hippa_button_down"></block>
-      <block type="hippa_light"></block>
-      <block type="hippa_light_off"></block>
-      <block type="hippa_typed_line"></block>
+    </category>
+    <category name="Battery and time" colour="290">
+      <block type="hippa_battery_percent"></block>
+      <block type="hippa_battery_volts"></block>
       <block type="hippa_wait">
         <value name="SECONDS"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
       </block>

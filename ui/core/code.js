@@ -796,6 +796,25 @@ print('Install done.')
       });
 
 
+    Code.workspace.registerButtonCallback('downloadHippaSetup', function(button) {
+
+	var url = "hippafone/deploy_all_to_adafruit_ESP32-S3_Feather_5477.py";
+	try {
+		var a = document.createElement('a');
+		a.href = url;
+		a.download = "deploy_all_to_adafruit_ESP32-S3_Feather_5477.py";
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	} catch (e) {
+		console.log(e);
+		window.open(url);
+	}
+	UI ['notify'].send("Downloaded the setup script: run it once, see the Setup category");
+
+      });
+
+
     Code.workspace.registerButtonCallback('loadExample', function(button) {
 
 	var tmp = button.text_.split(":")[1];
