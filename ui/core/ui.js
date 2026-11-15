@@ -393,7 +393,7 @@ class workspace {
     });
     this.selector.onchange = () => {this.change ()};
 
-    this.websocket = {url:get('#url'), pass:get('#password')};
+    this.websocket = {url:get('#url'), pass:get('#webreplKey')};
     this.runButton = {
         dom:get('#runButton'),
         status:true

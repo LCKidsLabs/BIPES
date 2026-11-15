@@ -50,12 +50,12 @@ function checkCookie() {
   if (cookies != "") {
     var cookies_ = cookies.split('&')
     document.getElementById('url').value = cookies_[0]
-    document.getElementById('password').value = cookies_[1].substring("last_pass=".length, cookies_[0].length)
+    document.getElementById('webreplKey').value = cookies_[1].substring("last_pass=".length, cookies_[0].length)
   } 
   
 }
 </script>
-  <link rel="stylesheet" href="style.css?ver=0.2.3.841940">
+  <link rel="stylesheet" href="style.css?ver=0.2.3.20261115">
   <link rel="stylesheet" href="core/libs.css">
   <script src="core/storage.js?ver=0.2.2.1125"></script>
   <script src="core/blockly_compressed.js?ver=0.2.1.841940"></script>
@@ -65,7 +65,7 @@ function checkCookie() {
   <script src="core/code.js?ver=0.2.3.841940"></script>
   <script src="core/channel.js?ver=0.2.3.841940"></script>
   <script src="core/utils.js?ver=0.2.3.841940"></script>
-  <script src="core/ui.js?ver=0.2.3.841940"></script>
+  <script src="core/ui.js?ver=0.2.3.20261115"></script>
   <script src="core/queue.js"></script>
   <script src="core/FileSaver.js"></script>
   <script src="core/shortcut.js"></script>
@@ -199,8 +199,12 @@ function checkCookie() {
     <div>
       <button class='icon' id="networkButton">Network</button>
       <span>
-      Address: <input type="text" name="webrepl_url" id="url" value="ws://192.168.0.35:8266/" />
-      Password: <input type="password" name="webrepl_pass" id="password" value="bipes" />
+      <!-- The WebREPL password is a device setting, not a site login. It is a
+           masked text field (not type="password") and avoids "pass" in its
+           name/id so browser password managers don't offer to save it or
+           warn that "bipes" was found in a breach. -->
+      Address: <input type="text" name="webrepl_url" id="url" value="ws://192.168.0.35:8266/" autocomplete="off" spellcheck="false" autocapitalize="off" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other" />
+      Password: <input type="text" name="webrepl_key" id="webreplKey" value="bipes" autocomplete="off" spellcheck="false" autocapitalize="off" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other" />
       </span>
       <button class="icon" value="Scan boards" id="scanButton" onclick="window.open('ports.html','popup','width=600,height=600'); return false;" target="popup">Scan devices</button>
     </div>
