@@ -309,9 +309,31 @@ var BlocklyStorage = {};
       try {
         UI ['account'].setProjectLabel (id, name);
       } catch (e) {}
-    }, function () {
+    }, function (e) {
+      console.warn ('project rename failed', e);
       if (S.id === id) S.name = old;
+      // The list already shows the typed name; show what the server holds.
+      try {
+        UI ['account'].refreshList ();
+      } catch (e2) {}
     });
+  }
+
+  /**
+   * Show the new project name in the account list as soon as the text in the
+   * Project Info description changes, instead of after the next save.
+   */
+  function showTypedName_ (ev) {
+    if (ev.type !== 'change' || ev.element !== 'field' || ev.name !== 'TEXT') return;
+    try {
+      var block = Code.workspace.getBlockById (ev.blockId);
+      var parent = block && block.getParent ();
+      if (!parent || parent.type !== 'project_metadata') return;
+      var input = parent.getInput ('project_description');
+      if (!input || !input.connection || input.connection.targetBlock () !== block) return;
+      var name = String (ev.newValue == null ? '' : ev.newValue).trim ().slice (0, 120);
+      if (name) UI ['account'].setProjectLabel (S.id, name);
+    } catch (e) {}
   }
 
   /** Wait for any save in flight, then save the latest. */
@@ -478,6 +500,7 @@ var BlocklyStorage = {};
       Code.workspace.addChangeListener (function (ev) {
         if (blocked_ () || Date.now () < S.quietUntil) return;
         if (ev.isUiEvent || ev.type === 'ui' || ev.type === 'finished_loading') return;
+        showTypedName_ (ev);
         schedule_ ();
       });
       UI ['workspace'].selector.addEventListener ('change', schedule_);
