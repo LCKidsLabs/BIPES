@@ -1,0 +1,5 @@
+<xml xmlns="https://bipes.net.br">
+  <workspace><field name="DEVICE">FEATHER_S3_MPY</field></workspace>
+  <variables></variables>
+  <block type="hippa_forever" id="b357" x="60" y="60"><statement name="DO"><block type="hippa_screen_title" id="b352"><value name="TEXT"><block type="text" id="b351"><field name="TEXT">HippaFone</field></block></value><next><block type="hippa_screen_write" id="b354"><value name="TEXT"><block type="text" id="b353"><field name="TEXT">Hello</field></block></value><next><block type="hippa_wait" id="b356"><value name="SECONDS"><block type="math_number" id="b355"><field name="NUM">2</field></block></value></block></next></block></next></block></statement></block>
+</xml>
