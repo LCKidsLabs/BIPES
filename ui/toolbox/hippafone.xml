@@ -88,7 +88,7 @@
       <label text="Windows: python deploy_all_to_adafruit_ESP32-S3_Feather_5477.py"></label>
       <label text="Ubuntu: python3 deploy_all_to_adafruit_ESP32-S3_Feather_5477.py"></label>
       <label text="Then pick the HippaFone board, connect, and build."></label>
-      <button text="Load example: hippafone_phone" callbackKey="loadExample"></button>
+      <button text="Load example: hippafone_messages" callbackKey="loadExample"></button>
     </category>
     <category name="Screen" colour="290">
       <block type="hippa_screen_title">
